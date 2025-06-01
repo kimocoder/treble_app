@@ -3,11 +3,19 @@ package me.phh.treble.app
 import android.app.Service
 import android.content.BroadcastReceiver
 import android.content.Context
+import android.content.ComponentName
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.net.ConnectivityManager
+import android.net.Network
+import android.net.NetworkCapabilities
+import android.net.NetworkRequest
 import android.os.IBinder
 import android.os.UserHandle
+import android.os.SystemProperties
 import android.util.Log
 import dalvik.system.PathClassLoader
+import kotlin.concurrent.thread
 
 class EntryService: Service() {
     companion object {
@@ -28,15 +36,40 @@ class EntryService: Service() {
     override fun onCreate() {
         service = this
 
-        tryC { Tools.startup(this) }
-        tryC { QtiAudio.startup(this) }
-        tryC { OnePlus.startup(this) }
-        tryC { OverlayPicker.startup(this) }
-        tryC { Doze.startup(this) }
-        tryC { Huawei.startup(this) }
-        tryC { Misc.startup(this) }
-        tryC { Samsung.startup(this) }
-        tryC { Hostapd.startup(this) }
+        thread {
+            tryC { Tools.startup(this) }
+            tryC { QtiAudio.startup(this) }
+            tryC { Lenovo.startup(this) }
+            tryC { OnePlus.startup(this) }
+            tryC { Oppo.startup(this) }
+            tryC { OverlayPicker.startup(this) }
+            tryC { Doze.startup(this) }
+            tryC { Huawei.startup(this) }
+            tryC { Misc.startup(this) }
+            tryC { Samsung.startup(this) }
+            tryC { Hostapd.startup(this) }
+            tryC { Xiaomi.startup(this) }
+            tryC { Qualcomm.startup(this) }
+            tryC { Vsmart.startup(this) }
+            tryC { Nubia.startup(this) }
+            tryC { Ims.startup(this) }
+            tryC { Custom.startup(this) }
+            tryC { Hct.startup(this) }
+
+            tryC { Desktop.startup(this) }
+            tryC { Lid.startup(this) }
+
+            tryC { PresetDownloader.startup(this) }
+            tryC {
+                val p = SystemProperties.get("ro.system.ota.json_url", "")
+                val c = ComponentName(this, UpdaterActivity::class.java)
+                if(p.trim() == "") {
+                    packageManager.setComponentEnabledSetting(c, PackageManager.COMPONENT_ENABLED_STATE_DISABLED, 0)
+                } else {
+                    packageManager.setComponentEnabledSetting(c, PackageManager.COMPONENT_ENABLED_STATE_DEFAULT, 0)
+                }
+            }
+        }
     }
 }
 
@@ -52,9 +85,6 @@ class Starter: BroadcastReceiver() {
         when(intent.action) {
             Intent.ACTION_BOOT_COMPLETED, Intent.ACTION_MY_PACKAGE_REPLACED -> {
                 context.startServiceAsUser(Intent(context, EntryService::class.java), UserHandle.SYSTEM)
-            }
-            "me.phh.update" -> {
-                UpdateApplier.applyUpdate(intent.data.path)
             }
         }
     }

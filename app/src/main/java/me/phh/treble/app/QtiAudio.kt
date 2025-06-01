@@ -31,34 +31,16 @@ class QtiAudio: EntryStartup {
         }
     }
 
-    override fun startup(ctxt: Context) {
-        thread {
-            for(slot in listOf("slot1", "slot2")) {
-                try {
-                    val svc = vendor.qti.hardware.radio.am.V1_0.IQcRilAudio.getService(slot)
-                    svc.setCallback(cbA)
-                } catch (e: Exception) {
-                    Log.d("PHH", "Failed setting vendor.qti.hardware.radio.am $slot cb $e")
-                }
-
-                try {
-                    val svc = vendor.qti.qcril.am.V1_0.IQcRilAudio.getService(slot)
-                    svc.setCallback(cbB)
-                } catch (e: Exception) {
-                    Log.d("PHH", "Failed setting vendor.qti.hardware.radio.am $slot cb $e")
-                }
-            }
-
-            Log.d("PHH", "Checking CAF IMS status")
-            val installed = ctxt.packageManager.getInstalledPackages(0).find { it.packageName == "org.codeaurora.ims" } != null
-            val imsRroProperty = "persist.sys.phh.ims.caf"
+    fun handleDynIms(ctxt: Context, pkgName: String, property: String) {
+            Log.d("PHH", "Checking IMS status $pkgName $property")
+            val installed = ctxt.packageManager.getInstalledPackages(0).find { it.packageName == pkgName } != null
+            val imsRroProperty = property
             Log.d("PHH", "CAF IMS $installed installed")
-            Thread.sleep(30*1000)
             if(installed) {
                 SystemProperties.set(imsRroProperty, "true")
                 val replaceIntent =
                         Intent(Intent.ACTION_PACKAGE_CHANGED)
-                                .setData(Uri.parse("package:org.codeaurora.ims"))
+                                .setData(Uri.parse("package:$pkgName"))
                                 .putExtra(Intent.EXTRA_UID, 0)
                                 .putExtra(Intent.EXTRA_DONT_KILL_APP, false)
                                 .putExtra(Intent.EXTRA_CHANGED_COMPONENT_NAME_LIST, emptyArray<String>())
@@ -66,9 +48,35 @@ class QtiAudio: EntryStartup {
             } else {
                 SystemProperties.set(imsRroProperty, "false")
             }
+    }
+
+    override fun startup(ctxt: Context) {
+        thread {
+            for(slot in listOf("slot1", "slot2", "default")) {
+                try {
+                    val svc = vendor.qti.hardware.radio.am.V1_0.IQcRilAudio.getService(slot)
+                    svc.setCallback(cbA)
+                    isQualcommDevice = true
+                } catch (e: Exception) {
+                    Log.d("PHH", "Failed setting vendor.qti.hardware.radio.am $slot cb $e")
+                }
+
+                try {
+                    val svc = vendor.qti.qcril.am.V1_0.IQcRilAudio.getService(slot)
+                    svc.setCallback(cbB)
+                    isQualcommDevice = true
+                } catch (e: Exception) {
+                    Log.d("PHH", "Failed setting vendor.qti.hardware.radio.am $slot cb $e")
+                }
+            }
+
+            Thread.sleep(30*1000);
+            handleDynIms(ctxt, "org.codeaurora.ims", "persist.sys.phh.ims.caf")
+            handleDynIms(ctxt, "com.shannon.imsservice", "persist.sys.phh.ims.sec")
         }
     }
     companion object: EntryStartup {
+        var isQualcommDevice = false
         override fun startup(ctxt: Context) {
             QtiAudio().startup(ctxt)
         }

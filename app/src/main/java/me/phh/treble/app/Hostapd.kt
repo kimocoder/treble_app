@@ -86,7 +86,7 @@ class Hostapd: EntryStartup {
                             "ctrl_interface=/data/misc/wifi/hostapd/ctrl\n" +
                             "ssid2=${ssidHex}\n" +
                             "channel=$channel\n" +
-                            "iee80211n=1\n" +
+                            "ieee80211n=1\n" +
                             "hw_mode=$hw_mode\n" +
                             "ignore_broadcast_ssid=$hidden\n" +
                             "wowlan_triggers=any\n" +
@@ -94,6 +94,7 @@ class Hostapd: EntryStartup {
 
             try {
                 val conf = File("/data/misc/wifi/hostapd.conf")
+                conf.delete()
                 conf.printWriter().use { it.print(config) }
                 conf.setReadable(true, false)
             } catch (t: Throwable) {
@@ -112,12 +113,7 @@ class Hostapd: EntryStartup {
 
     companion object : EntryStartup{
         override fun startup(ctxt: Context) {
-            try {
-                //Check if there is already an hostapd interface
-                if(IHostapd.getService()!=null) return
-            } catch(t: Throwable) {
-                Log.d("PHH", "Couldn't find hostapd service", t)
-            }
+            if(!SystemProperties.getBoolean("persist.sys.phh.system_hostapd", false)) return
             Log.d("PHH", "Implementing our own hostapd service")
             Hostapd().startup(ctxt)
         }

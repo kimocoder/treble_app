@@ -42,23 +42,79 @@ class Samsung: EntryStartup {
                     AudioSystem.setParameters("SpkAmpLPowerOn=0")
                 }
             }
+            SamsungSettings.wirelessChargingTransmit -> {
+                val value = if(sp.getBoolean(key, false)) "1" else "0"
+                try {
+                    File("/sys/class/power_supply/battery/wc_tx_en").writeText(value + "\n")
+                } catch(e: Exception) {
+                    Log.e("PHH", "Failed setting wireless charging transmit", e)
+                }
+            }
+            SamsungSettings.doubleTapToWake -> {
+                var cmd = if(sp.getBoolean(key, false)) "aot_enable,1" else "aot_enable,0"
+                tsCmd(cmd)
+            }
+            SamsungSettings.extraSensors -> {
+                val value = if(sp.getBoolean(key, false)) "true" else " false"
+                SystemProperties.set("persist.sys.phh.samsung_sensors", value)
+            }
+            SamsungSettings.colorspace -> {
+                val value = if(sp.getBoolean(key, false)) "true" else " false"
+                SystemProperties.set("persist.sys.phh.samsung_colorspace", value)
+            }
+            SamsungSettings.brokenFingerprint -> {
+                val value = if(sp.getBoolean(key, false)) "1" else " 0"
+                SystemProperties.set("persist.sys.phh.samsung_fingerprint", value)
+            }
+            SamsungSettings.backlightMultiplier -> {
+                val value = sp.getString(key, "-1")
+                SystemProperties.set("persist.sys.phh.samsung_backlight", value)
+            }
+            SamsungSettings.cameraIds -> {
+                val value = sp.getBoolean(key, false)
+                SystemProperties.set("persist.sys.phh.samsung.camera_ids", value.toString())
+            }
+            SamsungSettings.alternateAudioPolicy -> {
+                val b = sp.getBoolean(key, false)
+                val value = if(b) "1" else "0"
+                Misc.safeSetprop("persist.sys.phh.caf.audio_policy", value)
+            }
+            SamsungSettings.escoTransportUnitSize -> {
+                val value = sp.getString(key, "0")
+                SystemProperties.set("persist.sys.bt.esco_transport_unit_size", value)
+            }
+            SamsungSettings.fodSingleClick -> {
+                val cmd = if(sp.getBoolean(key, false)) "fod_lp_mode,1" else "fod_lp_mode,0"
+                tsCmd(cmd)
+            }
+            SamsungSettings.flashStrength -> {
+                val value = sp.getString(key, "1")
+                SystemProperties.set("persist.sys.phh.flash_strength", value)
+            }
         }
     }
 
     override fun startup(ctxt: Context) {
         if (!SamsungSettings.enabled()) return
 
+        //Reset wirelesss charging transmit at every boot
         val sp = PreferenceManager.getDefaultSharedPreferences(ctxt)
+
+        sp.edit().putBoolean(SamsungSettings.wirelessChargingTransmit, false).apply()
+
         sp.registerOnSharedPreferenceChangeListener(spListener)
 
         //Refresh parameters on boot
         spListener.onSharedPreferenceChanged(sp, SamsungSettings.highBrightess)
         spListener.onSharedPreferenceChanged(sp, SamsungSettings.gloveMode)
         spListener.onSharedPreferenceChanged(sp, SamsungSettings.audioStereoMode)
+        spListener.onSharedPreferenceChanged(sp, SamsungSettings.doubleTapToWake)
         Log.e("PHH", "Samsung TS: ${tsCmd("get_chip_vendor")}:${tsCmd("get_chip_name")}")
 
         Log.e("PHH", "Samsung TS: Supports glove_mode ${tsCmdExists("glove_mode")}")
         Log.e("PHH", "Samsung TS: Supports aod_enable ${tsCmdExists("aod_enable")}")
+
+        tsCmd("check_connection")
 
         for(malware in listOf("com.dti.globe", "com.singtel.mysingtel", "com.LogiaGroup.LogiaDeck", "com.mygalaxy")) {
             try {

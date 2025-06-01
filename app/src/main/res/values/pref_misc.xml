@@ -36,4 +36,46 @@
 	    <item>"2.0"</item>
 	    <item>"0.0"</item>
     </array>
+
+    <array name="pref_misc_bluetooth">
+        <item>"None"</item>
+	    <item>"Mediatek"</item>
+	    <item>"Huawei"</item>
+    </array>
+    <array name="pref_misc_bluetooth_values">
+	    <item>"none"</item>
+	    <item>"mediatek"</item>
+	    <item>"huawei"</item>
+    </array>
+
+    <array name="pref_misc_display_fps">
+	    <item>"Don't force"</item>
+	    <item>"60fps"</item>
+    </array>
+    <array name="pref_misc_display_fps_values">
+	    <item>"-1"</item>
+	    <item>"0"</item>
+    </array>
+
+    <array name="pref_misc_camera_timestamp">
+      <item>"Don't override"</item>
+      <item>"Clock monotonic"</item>
+      <item>"Clock boottime"</item>
+    </array>
+    <array name="pref_misc_camera_timestamp_values">
+      <item>"-1"</item>
+      <item>"0"</item>
+      <item>"1"</item>
+    </array>
+
+    <array name="pref_misc_fod_color">
+      <item>"Green"</item>
+      <item>"Cyan"</item>
+      <item>"White"</item>
+    </array>
+    <array name="pref_misc_fod_color_values">
+      <item>"00ff00"</item>
+      <item>"00ffff"</item>
+      <item>"ffffff"</item>
+    </array>
 </resources>

@@ -2,7 +2,7 @@
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
     <PreferenceCategory android:title="Fingerprint">
         <CheckBoxPreference
-            android:defaultValue="true"
+            android:defaultValue="false"
             android:key="key_huawei_fingerprint_gestures"
             android:title="Enable Fingerprint gestures" />
     </PreferenceCategory>
@@ -14,7 +14,7 @@
         <CheckBoxPreference
             android:defaultValue="false"
             android:key="key_huawei_no_hwcomposer"
-            android:title="Enable blurry UI workaround (eats more battery)" />
+            android:title="Enable graphic issues workaround (recommended if ui is blurry)" />
     </PreferenceCategory>
     <PreferenceCategory android:title="Misc">
 	    <ListPreference
@@ -24,4 +24,5 @@
 		    android:key="key_huawei_fast_charge"
 		    android:title="Huawei fast charge" />
     </PreferenceCategory>
+
 </PreferenceScreen>

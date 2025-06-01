@@ -1,21 +1,24 @@
 package me.phh.treble.app
 
-import android.os.Bundle
-import android.os.SystemProperties
-import android.preference.PreferenceFragment
-
-object SamsungSettings {
+object SamsungSettings : Settings {
     val highBrightess = "key_samsung_high_brightness"
     val gloveMode = "key_samsung_glove_mode"
     val audioStereoMode = "key_samsung_audio_stereo"
+    val wirelessChargingTransmit = "key_samsung_wireless_charging_transmit"
+    val doubleTapToWake = "key_samsung_double_tap_to_wake"
+    val extraSensors = "key_samsung_extra_sensors"
+    val colorspace = "key_samsung_colorspace"
+    val brokenFingerprint = "key_samsung_broken_fingerprint"
+    val backlightMultiplier = "key_samsung_backlight_multiplier"
+    val cameraIds = "key_samsung_camera_ids"
+    val alternateAudioPolicy = "key_samsung_alternate_audio_policy"
+    val escoTransportUnitSize = "key_samsung_esco_transport_unit_size"
+    val fodSingleClick = "key_samsung_fod_single_click"
+    val flashStrength = "key_samsung_flash_strength"
 
-    fun enabled(): Boolean =
-            Tools.vendorFpLow.matches(Regex(".*(crown|star)[q2]*lte.*"))
+    override fun enabled() = Tools.vendorFpLow.startsWith("samsung/")
 }
 
-class SamsungSettingsFragment : PreferenceFragment() {
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        addPreferencesFromResource(R.xml.pref_samsung)
-    }
+class SamsungSettingsFragment : SettingsFragment() {
+    override val preferencesResId = R.xml.pref_samsung
 }

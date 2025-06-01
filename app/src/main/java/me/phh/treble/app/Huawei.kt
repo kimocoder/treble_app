@@ -17,9 +17,10 @@ import java.io.File
 class Huawei: EntryStartup {
     val fastChargeCharger = "/sys/class/hw_power/charger/direct_charger/iin_thermal"
     val fastChargeData = "/sys/class/hw_power/charger/charge_data/iin_thermal"
-    val fpService = IExtBiometricsFingerprint.getService()
-    val tsService = ITouchscreen.getService()
-    val surfaceFlinger = ServiceManager.getService("SurfaceFlinger");
+    val fpService = try { IExtBiometricsFingerprint.getService() } catch(t: Throwable) { Log.d("PHH", "Failed getting fp svc" , t);null }
+    val tsService = try { ITouchscreen.getService() } catch(t: Throwable) { Log.d("PHH", "Failed getting tp svc" , t); null }
+    val surfaceFlinger = ServiceManager.getService("SurfaceFlinger")
+    var ctxt: Context? = null
 
     fun enableHwcOverlay(v: Boolean) {
         val data = Parcel.obtain()
@@ -41,17 +42,17 @@ class Huawei: EntryStartup {
     val spListener = SharedPreferences.OnSharedPreferenceChangeListener { sp, key ->
         when(key) {
             HuaweiSettings.fingerprintGestures -> {
-                val value = sp.getBoolean(key, true)
+                val value = sp.getBoolean(key, false)
                 Log.d("PHH", "Setting Huawei fingerprint gestures to $value")
                 if(value)
-                    fpService.sendCmdToHal(41)
+                    fpService?.sendCmdToHal(41)
                 else
-                    fpService.sendCmdToHal(42)
+                    fpService?.sendCmdToHal(42)
             }
             HuaweiSettings.touchscreenGloveMode -> {
                 val value = sp.getBoolean(key, false)
                 Log.d("PHH", "Setting Huawei glove mode to $value")
-                tsService.hwTsSetGloveMode(value)
+                tsService?.hwTsSetGloveMode(value)
             }
             HuaweiSettings.fastCharge -> {
                 val value = sp.getString(key, "-1")
@@ -83,15 +84,17 @@ class Huawei: EntryStartup {
         val sp = PreferenceManager.getDefaultSharedPreferences(ctxt)
         sp.registerOnSharedPreferenceChangeListener(spListener)
 
+        this.ctxt = ctxt.applicationContext
+
         //Refresh parameters on boot
         spListener.onSharedPreferenceChanged(sp, HuaweiSettings.fingerprintGestures)
         spListener.onSharedPreferenceChanged(sp, HuaweiSettings.touchscreenGloveMode)
         spListener.onSharedPreferenceChanged(sp, HuaweiSettings.fastCharge)
         spListener.onSharedPreferenceChanged(sp, HuaweiSettings.noHwcomposer)
-        tsService.hwTsGetChipInfo({ _, chip_info ->
+        tsService?.hwTsGetChipInfo { _, chip_info ->
             Log.d("PHH", "HW Touchscreen chip $chip_info")
-        })
-        
+        }
+
         Log.d("PHH", "Checking HwIms status")
         val installed = ctxt.packageManager.getInstalledPackages(0).find { it.packageName == "com.huawei.ims" } != null
         val imsRroProperty = "persist.sys.phh.ims.hw"
@@ -109,7 +112,7 @@ class Huawei: EntryStartup {
     }
 
     companion object: EntryStartup {
-        var self: Huawei? = null
+        private var self: Huawei? = null
         override fun startup(ctxt: Context) {
             if (!HuaweiSettings.enabled()) return
             self = Huawei()
